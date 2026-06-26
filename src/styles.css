@@ -196,6 +196,26 @@ textarea {
   white-space: nowrap;
 }
 
+.room-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 4px;
+  padding: 9px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdff;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.room-summary strong {
+  color: var(--navy);
+  white-space: nowrap;
+}
+
 .primary-button,
 .ghost-button,
 .logout-button,

@@ -437,10 +437,16 @@ function MemberBooking({ profile }: { profile: Profile }) {
               <option value="">Seleccionar</option>
               {visibleRooms.map((room) => (
                 <option key={room.id} value={room.id}>
-                  {room.room_number} - {room.name} · Máx. {room.capacity} personas · {money(room.nightly_price)}
+                  {room.room_number} - {room.name}
                 </option>
               ))}
             </select>
+            {selectedRoom && (
+              <div className="room-summary">
+                <span>Máximo {selectedRoom.capacity} personas</span>
+                <strong>{money(selectedRoom.nightly_price)} por noche</strong>
+              </div>
+            )}
           </label>
           <label>
             Entrada
