@@ -63,6 +63,10 @@ function nightsBetween(checkIn: string, checkOut: string) {
   return Math.round((end.getTime() - start.getTime()) / 86400000);
 }
 
+function reservationGuestCount(reservation: Reservation) {
+  return reservation.guest_names?.filter((name) => name.trim()).length || reservation.guests || 1;
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -563,7 +567,7 @@ function Availability({ reservations, rooms }: { reservations: Reservation[]; ro
             <div className="calendar-room">
               <strong>{reservation.rooms?.room_number ?? rooms.find((room) => room.id === reservation.room_id)?.room_number}</strong>
               <span>{reservation.rooms?.name ?? "Habitación reservada"}</span>
-              <small>{reservation.hotels?.name}</small>
+              <small>{reservation.hotels?.name} · {reservationGuestCount(reservation)} persona{reservationGuestCount(reservation) === 1 ? "" : "s"}</small>
             </div>
             <div className="calendar-date">
               <span>Entrada</span>
@@ -834,6 +838,7 @@ function ReservationTable({
               <td>
                 {reservation.rooms?.room_number} - {reservation.rooms?.name}
                 {reservation.rooms?.capacity && <small className="table-note">Máx. {reservation.rooms.capacity} personas</small>}
+                <small className="table-note">Reservaron {reservationGuestCount(reservation)} persona{reservationGuestCount(reservation) === 1 ? "" : "s"}</small>
                 {reservation.guest_names?.length ? <small className="table-note">Huéspedes: {reservation.guest_names.join(", ")}</small> : null}
               </td>
               <td>{reservation.check_in}</td>
