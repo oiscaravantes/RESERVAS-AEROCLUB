@@ -48,6 +48,7 @@ export type Reservation = {
   check_in: string;
   check_out: string;
   guests: number;
+  guest_names: string[] | null;
   status: ReservationStatus;
   comments: string | null;
   created_at: string;

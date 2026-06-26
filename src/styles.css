@@ -402,6 +402,18 @@ textarea {
   font-size: 22px;
 }
 
+.guest-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.guest-fields input:first-child {
+  border-color: rgba(30, 111, 168, 0.45);
+  background: #fbfdff;
+  font-weight: 800;
+}
+
 .calendar-list,
 .catalog-row {
   display: grid;
@@ -555,6 +567,10 @@ th {
   }
 
   .booking-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .guest-fields {
     grid-template-columns: 1fr;
   }
 

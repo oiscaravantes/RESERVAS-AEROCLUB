@@ -62,6 +62,7 @@ create table if not exists public.reservations (
   check_in date not null,
   check_out date not null,
   guests integer not null default 1 check (guests > 0),
+  guest_names text[] not null default '{}',
   status public.reservation_status not null default 'aprobada',
   comments text,
   created_at timestamptz not null default now(),
@@ -143,6 +144,7 @@ begin
       or new.check_in is distinct from old.check_in
       or new.check_out is distinct from old.check_out
       or new.guests is distinct from old.guests
+      or new.guest_names is distinct from old.guest_names
       or new.comments is distinct from old.comments
       or new.created_at is distinct from old.created_at then
       raise exception 'Los socios no pueden editar datos de la reserva; solo cancelarla si cumple la política.';
@@ -169,6 +171,22 @@ begin
 
   if new.guests > room_capacity then
     raise exception 'La cantidad de huéspedes supera la capacidad de la habitación.';
+  end if;
+
+  new.guest_names = array(
+    select nullif(trim(guest_name), '')
+    from unnest(coalesce(new.guest_names, '{}')) as guest_name
+    where nullif(trim(guest_name), '') is not null
+  );
+
+  if coalesce(array_length(new.guest_names, 1), 0) = 0 then
+    raise exception 'Debes ingresar al menos el nombre del piloto o socio responsable.';
+  end if;
+
+  new.guests = array_length(new.guest_names, 1);
+
+  if new.guests > room_capacity then
+    raise exception 'La cantidad de nombres de huéspedes supera la capacidad de la habitación.';
   end if;
 
   select active into member_is_active

@@ -355,7 +355,7 @@ function MemberBooking({ profile }: { profile: Profile }) {
     room_id: "",
     check_in: todayISO(),
     check_out: "",
-    guests: 1,
+    guest_names: [profile.full_name],
     comments: "",
   });
 
@@ -378,6 +378,25 @@ function MemberBooking({ profile }: { profile: Profile }) {
   const selectedRoom = rooms.find((room) => room.id === form.room_id);
   const nights = nightsBetween(form.check_in, form.check_out);
   const estimatedTotal = selectedRoom && nights > 0 ? selectedRoom.nightly_price * nights : 0;
+  const guestSlots = selectedRoom?.capacity ?? 0;
+  const guestNames = Array.from({ length: guestSlots }, (_item, index) => form.guest_names[index] ?? "");
+  const filledGuestNames = guestNames.map((name) => name.trim()).filter(Boolean);
+
+  function updateRoom(roomId: string) {
+    const room = rooms.find((item) => item.id === roomId);
+    const nextNames = Array.from({ length: room?.capacity ?? 0 }, (_item, index) => {
+      if (index === 0) return form.guest_names[0]?.trim() || profile.full_name;
+      return form.guest_names[index] ?? "";
+    });
+    setForm({ ...form, room_id: roomId, guest_names: nextNames });
+  }
+
+  function updateGuestName(index: number, value: string) {
+    const nextNames = [...guestNames];
+    nextNames[index] = value;
+    if (index === 0 && !value.trim()) nextNames[index] = profile.full_name;
+    setForm({ ...form, guest_names: nextNames });
+  }
 
   async function createReservation(event: React.FormEvent) {
     event.preventDefault();
@@ -398,13 +417,19 @@ function MemberBooking({ profile }: { profile: Profile }) {
       return;
     }
 
+    if (!filledGuestNames.length) {
+      setMessage("Agrega al menos el nombre del piloto o socio responsable.");
+      return;
+    }
+
     const { error } = await supabase.from("reservations").insert({
       member_id: profile.id,
       hotel_id: form.hotel_id,
       room_id: form.room_id,
       check_in: form.check_in,
       check_out: form.check_out,
-      guests: form.guests,
+      guests: filledGuestNames.length,
+      guest_names: filledGuestNames,
       comments: form.comments || null,
       status: "aprobada",
     });
@@ -415,7 +440,7 @@ function MemberBooking({ profile }: { profile: Profile }) {
     }
 
     setMessage("Reserva aprobada automáticamente. Recibirás confirmación del administrador si hay algún ajuste.");
-    setForm((current) => ({ ...current, room_id: "", comments: "" }));
+    setForm((current) => ({ ...current, room_id: "", guest_names: [profile.full_name], comments: "" }));
     loadBookingData();
   }
 
@@ -444,7 +469,7 @@ function MemberBooking({ profile }: { profile: Profile }) {
             Habitación
             <select
               value={form.room_id}
-              onChange={(event) => setForm({ ...form, room_id: event.target.value })}
+              onChange={(event) => updateRoom(event.target.value)}
               required
               disabled={!form.hotel_id}
             >
@@ -464,10 +489,24 @@ function MemberBooking({ profile }: { profile: Profile }) {
             Salida
             <input type="date" min={form.check_in || todayISO()} value={form.check_out} onChange={(event) => setForm({ ...form, check_out: event.target.value })} required />
           </label>
-          <label>
-            Huéspedes
-            <input type="number" min="1" max={selectedRoom?.capacity ?? 12} value={form.guests} onChange={(event) => setForm({ ...form, guests: Number(event.target.value) })} required />
-            {selectedRoom && <small className="helper-text">Máximo permitido: {selectedRoom.capacity} personas.</small>}
+          <label className="span-2">
+            Nombres de huéspedes
+            <div className="guest-fields">
+              {selectedRoom ? (
+                guestNames.map((name, index) => (
+                  <input
+                    key={`${selectedRoom.id}-${index}`}
+                    value={name}
+                    onChange={(event) => updateGuestName(index, event.target.value)}
+                    placeholder={index === 0 ? "Piloto responsable" : `Huésped ${index + 1} (opcional)`}
+                    required={index === 0}
+                  />
+                ))
+              ) : (
+                <input value="" placeholder="Selecciona una habitación primero" disabled />
+              )}
+            </div>
+            {selectedRoom && <small className="helper-text">Puedes dejar vacíos los espacios que no se usarán. Máximo {selectedRoom.capacity} personas.</small>}
           </label>
           <label className="span-2">
             Comentarios
@@ -479,7 +518,7 @@ function MemberBooking({ profile }: { profile: Profile }) {
                 <div>
                   <span>Habitación seleccionada</span>
                   <strong>{selectedRoom.room_number} - {selectedRoom.name}</strong>
-                  <small>Máximo {selectedRoom.capacity} personas</small>
+                  <small>{filledGuestNames.length || 1} de {selectedRoom.capacity} espacios usados</small>
                 </div>
                 <div>
                   <span>Precio por noche</span>
@@ -789,6 +828,7 @@ function ReservationTable({
               <td>
                 {reservation.rooms?.room_number} - {reservation.rooms?.name}
                 {reservation.rooms?.capacity && <small className="table-note">Máx. {reservation.rooms.capacity} personas</small>}
+                {reservation.guest_names?.length ? <small className="table-note">Huéspedes: {reservation.guest_names.join(", ")}</small> : null}
               </td>
               <td>{reservation.check_in}</td>
               <td>{reservation.check_out}</td>
