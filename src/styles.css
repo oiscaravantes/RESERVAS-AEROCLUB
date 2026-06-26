@@ -180,6 +180,22 @@ textarea {
   resize: vertical;
 }
 
+.helper-text,
+.table-note,
+.blocked-note {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.blocked-note {
+  padding: 6px 8px;
+  border-radius: 999px;
+  background: #eef3f8;
+  white-space: nowrap;
+}
+
 .primary-button,
 .ghost-button,
 .logout-button,

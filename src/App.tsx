@@ -45,6 +45,17 @@ function money(value: number) {
   }).format(value);
 }
 
+function addDaysISO(days: number) {
+  const date = new Date();
+  date.setHours(0, 0, 0, 0);
+  date.setDate(date.getDate() + days);
+  return date.toISOString().slice(0, 10);
+}
+
+function canMemberCancel(checkIn: string) {
+  return checkIn >= addDaysISO(5);
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -426,7 +437,7 @@ function MemberBooking({ profile }: { profile: Profile }) {
               <option value="">Seleccionar</option>
               {visibleRooms.map((room) => (
                 <option key={room.id} value={room.id}>
-                  {room.room_number} - {room.name} ({money(room.nightly_price)})
+                  {room.room_number} - {room.name} · Máx. {room.capacity} personas · {money(room.nightly_price)}
                 </option>
               ))}
             </select>
@@ -442,6 +453,7 @@ function MemberBooking({ profile }: { profile: Profile }) {
           <label>
             Huéspedes
             <input type="number" min="1" max={selectedRoom?.capacity ?? 12} value={form.guests} onChange={(event) => setForm({ ...form, guests: Number(event.target.value) })} required />
+            {selectedRoom && <small className="helper-text">Máximo permitido: {selectedRoom.capacity} personas.</small>}
           </label>
           <label className="span-2">
             Comentarios
@@ -474,7 +486,7 @@ function Availability({ reservations, rooms }: { reservations: Reservation[]; ro
           <article key={reservation.id} className="calendar-item">
             <div>
               <strong>{reservation.rooms?.room_number ?? rooms.find((room) => room.id === reservation.room_id)?.room_number}</strong>
-              <span>{reservation.check_in} al {reservation.check_out}</span>
+              <span>{reservation.check_in} al {reservation.check_out} · {reservation.rooms?.capacity ?? rooms.find((room) => room.id === reservation.room_id)?.capacity} personas máx.</span>
             </div>
             <span className={`status ${reservation.status}`}>{statusLabels[reservation.status]}</span>
           </article>
@@ -486,6 +498,7 @@ function Availability({ reservations, rooms }: { reservations: Reservation[]; ro
 
 function MyReservations({ profile }: { profile: Profile }) {
   const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [message, setMessage] = useState("");
 
   useEffect(() => {
     load();
@@ -500,8 +513,19 @@ function MyReservations({ profile }: { profile: Profile }) {
     setReservations(data ?? []);
   }
 
-  async function cancelReservation(id: string) {
-    await supabase.from("reservations").update({ status: "cancelada" }).eq("id", id);
+  async function cancelReservation(reservation: Reservation) {
+    setMessage("");
+
+    if (!canMemberCancel(reservation.check_in)) {
+      setMessage("Esta reserva ya no se puede cancelar desde el portal porque faltan menos de 5 días para la entrada.");
+      return;
+    }
+
+    const { error } = await supabase.from("reservations").update({ status: "cancelada" }).eq("id", reservation.id);
+    if (error) {
+      setMessage(error.message.includes("cancel_deadline_passed") ? "Esta reserva ya no cumple la política de cancelación de 5 días." : error.message);
+      return;
+    }
     load();
   }
 
@@ -514,7 +538,8 @@ function MyReservations({ profile }: { profile: Profile }) {
         </div>
         <BedDouble />
       </div>
-      <ReservationTable reservations={reservations} onCancel={cancelReservation} />
+      {message && <p className="form-message">{message}</p>}
+      <ReservationTable reservations={reservations} onCancel={cancelReservation} enforceCancelPolicy />
     </section>
   );
 }
@@ -628,7 +653,7 @@ function AdminReservations() {
           <option value="cancelada">Canceladas</option>
         </select>
       </div>
-      <ReservationTable reservations={filtered} admin onApprove={(id) => updateStatus(id, "aprobada")} onCancel={(id) => updateStatus(id, "cancelada")} />
+      <ReservationTable reservations={filtered} admin onApprove={(id) => updateStatus(id, "aprobada")} onCancel={(reservation) => updateStatus(reservation.id, "cancelada")} />
     </section>
   );
 }
@@ -697,11 +722,13 @@ function ReservationTable({
   admin = false,
   onApprove,
   onCancel,
+  enforceCancelPolicy = false,
 }: {
   reservations: Reservation[];
   admin?: boolean;
   onApprove?: (id: string) => void;
-  onCancel?: (id: string) => void;
+  onCancel?: (reservation: Reservation) => void;
+  enforceCancelPolicy?: boolean;
 }) {
   return (
     <div className="table-wrap">
@@ -722,7 +749,10 @@ function ReservationTable({
             <tr key={reservation.id}>
               {admin && <td>{reservation.profiles?.full_name}</td>}
               <td>{reservation.hotels?.name}</td>
-              <td>{reservation.rooms?.room_number} - {reservation.rooms?.name}</td>
+              <td>
+                {reservation.rooms?.room_number} - {reservation.rooms?.name}
+                {reservation.rooms?.capacity && <small className="table-note">Máx. {reservation.rooms.capacity} personas</small>}
+              </td>
               <td>{reservation.check_in}</td>
               <td>{reservation.check_out}</td>
               <td><span className={`status ${reservation.status}`}>{statusLabels[reservation.status]}</span></td>
@@ -733,10 +763,13 @@ function ReservationTable({
                       <CheckCircle2 size={18} />
                     </button>
                   )}
-                  {reservation.status !== "cancelada" && (
-                    <button className="icon-button danger" onClick={() => onCancel?.(reservation.id)} title="Cancelar">
+                  {reservation.status !== "cancelada" && (!enforceCancelPolicy || canMemberCancel(reservation.check_in)) && (
+                    <button className="icon-button danger" onClick={() => onCancel?.(reservation)} title="Cancelar">
                       <XCircle size={18} />
                     </button>
+                  )}
+                  {reservation.status !== "cancelada" && enforceCancelPolicy && !canMemberCancel(reservation.check_in) && (
+                    <span className="blocked-note">Fuera de plazo</span>
                   )}
                 </div>
               </td>
