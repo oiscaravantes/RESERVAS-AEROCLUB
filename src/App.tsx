@@ -456,6 +456,23 @@ function MemberBooking({ profile }: { profile: Profile }) {
               ))}
             </select>
           </label>
+          <label>
+            Entrada
+            <input type="date" min={todayISO()} value={form.check_in} onChange={(event) => setForm({ ...form, check_in: event.target.value })} required />
+          </label>
+          <label>
+            Salida
+            <input type="date" min={form.check_in || todayISO()} value={form.check_out} onChange={(event) => setForm({ ...form, check_out: event.target.value })} required />
+          </label>
+          <label>
+            Huéspedes
+            <input type="number" min="1" max={selectedRoom?.capacity ?? 12} value={form.guests} onChange={(event) => setForm({ ...form, guests: Number(event.target.value) })} required />
+            {selectedRoom && <small className="helper-text">Máximo permitido: {selectedRoom.capacity} personas.</small>}
+          </label>
+          <label className="span-2">
+            Comentarios
+            <textarea value={form.comments} onChange={(event) => setForm({ ...form, comments: event.target.value })} rows={3} />
+          </label>
           <div className="booking-summary span-2">
             {selectedRoom ? (
               <>
@@ -479,23 +496,6 @@ function MemberBooking({ profile }: { profile: Profile }) {
               <p>Selecciona hotel y habitación para ver precio, capacidad y total estimado.</p>
             )}
           </div>
-          <label>
-            Entrada
-            <input type="date" min={todayISO()} value={form.check_in} onChange={(event) => setForm({ ...form, check_in: event.target.value })} required />
-          </label>
-          <label>
-            Salida
-            <input type="date" min={form.check_in || todayISO()} value={form.check_out} onChange={(event) => setForm({ ...form, check_out: event.target.value })} required />
-          </label>
-          <label>
-            Huéspedes
-            <input type="number" min="1" max={selectedRoom?.capacity ?? 12} value={form.guests} onChange={(event) => setForm({ ...form, guests: Number(event.target.value) })} required />
-            {selectedRoom && <small className="helper-text">Máximo permitido: {selectedRoom.capacity} personas.</small>}
-          </label>
-          <label className="span-2">
-            Comentarios
-            <textarea value={form.comments} onChange={(event) => setForm({ ...form, comments: event.target.value })} rows={3} />
-          </label>
           <button className="primary-button span-2">Solicitar reserva</button>
           {message && <p className="form-message span-2">{message}</p>}
         </form>
