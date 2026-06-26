@@ -433,8 +433,13 @@ function MemberBooking({ profile }: { profile: Profile }) {
           </label>
           <label>
             Habitación
-            <select value={form.room_id} onChange={(event) => setForm({ ...form, room_id: event.target.value })} required>
-              <option value="">Seleccionar</option>
+            <select
+              value={form.room_id}
+              onChange={(event) => setForm({ ...form, room_id: event.target.value })}
+              required
+              disabled={!form.hotel_id}
+            >
+              <option value="">{form.hotel_id ? "Seleccionar" : "Selecciona un hotel primero"}</option>
               {visibleRooms.map((room) => (
                 <option key={room.id} value={room.id}>
                   {room.room_number} - {room.name}
