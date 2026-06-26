@@ -3,6 +3,8 @@
 alter table public.reservations
 add column if not exists guest_names text[] not null default '{}';
 
+alter table public.reservations disable trigger reservations_validate;
+
 update public.reservations
 set guest_names = array[
   coalesce(
@@ -11,6 +13,8 @@ set guest_names = array[
   )
 ]
 where coalesce(array_length(guest_names, 1), 0) = 0;
+
+alter table public.reservations enable trigger reservations_validate;
 
 create or replace function public.validate_reservation()
 returns trigger
