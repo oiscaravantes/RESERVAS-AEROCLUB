@@ -824,6 +824,9 @@ function ReservationTable({
             {admin && <th>Socio</th>}
             <th>Hotel</th>
             <th>Habitación</th>
+            <th>Capacidad</th>
+            <th>Personas</th>
+            <th>Huéspedes</th>
             <th>Entrada</th>
             <th>Salida</th>
             <th>Estado</th>
@@ -835,11 +838,19 @@ function ReservationTable({
             <tr key={reservation.id}>
               {admin && <td>{reservation.profiles?.full_name}</td>}
               <td>{reservation.hotels?.name}</td>
+              <td>{reservation.rooms?.room_number} - {reservation.rooms?.name}</td>
+              <td>{reservation.rooms?.capacity ? `${reservation.rooms.capacity} máx.` : "Sin dato"}</td>
+              <td>{reservationGuestCount(reservation)} persona{reservationGuestCount(reservation) === 1 ? "" : "s"}</td>
               <td>
-                {reservation.rooms?.room_number} - {reservation.rooms?.name}
-                {reservation.rooms?.capacity && <small className="table-note">Máx. {reservation.rooms.capacity} personas</small>}
-                <small className="table-note">Reservaron {reservationGuestCount(reservation)} persona{reservationGuestCount(reservation) === 1 ? "" : "s"}</small>
-                {reservation.guest_names?.length ? <small className="table-note">Huéspedes: {reservation.guest_names.join(", ")}</small> : null}
+                {reservation.guest_names?.length ? (
+                  <div className="guest-chip-list">
+                    {reservation.guest_names.map((name) => (
+                      <span key={`${reservation.id}-${name}`}>{name}</span>
+                    ))}
+                  </div>
+                ) : (
+                  <span className="table-note">Sin nombres registrados</span>
+                )}
               </td>
               <td>{reservation.check_in}</td>
               <td>{reservation.check_out}</td>

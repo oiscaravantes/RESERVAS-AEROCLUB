@@ -498,7 +498,7 @@ textarea {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 780px;
+  min-width: 1080px;
 }
 
 th,
@@ -517,6 +517,25 @@ th {
 .action-row {
   display: flex;
   gap: 8px;
+}
+
+.guest-chip-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-width: 260px;
+}
+
+.guest-chip-list span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: #edf5fc;
+  color: var(--navy);
+  font-size: 12px;
+  font-weight: 800;
 }
 
 .icon-button {
