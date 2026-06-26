@@ -56,6 +56,13 @@ function canMemberCancel(checkIn: string) {
   return checkIn >= addDaysISO(5);
 }
 
+function nightsBetween(checkIn: string, checkOut: string) {
+  if (!checkIn || !checkOut || checkOut <= checkIn) return 0;
+  const start = new Date(`${checkIn}T00:00:00`);
+  const end = new Date(`${checkOut}T00:00:00`);
+  return Math.round((end.getTime() - start.getTime()) / 86400000);
+}
+
 export default function App() {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
@@ -369,6 +376,8 @@ function MemberBooking({ profile }: { profile: Profile }) {
 
   const visibleRooms = rooms.filter((room) => !form.hotel_id || room.hotel_id === form.hotel_id);
   const selectedRoom = rooms.find((room) => room.id === form.room_id);
+  const nights = nightsBetween(form.check_in, form.check_out);
+  const estimatedTotal = selectedRoom && nights > 0 ? selectedRoom.nightly_price * nights : 0;
 
   async function createReservation(event: React.FormEvent) {
     event.preventDefault();
@@ -446,13 +455,30 @@ function MemberBooking({ profile }: { profile: Profile }) {
                 </option>
               ))}
             </select>
-            {selectedRoom && (
-              <div className="room-summary">
-                <span>Máximo {selectedRoom.capacity} personas</span>
-                <strong>{money(selectedRoom.nightly_price)} por noche</strong>
-              </div>
-            )}
           </label>
+          <div className="booking-summary span-2">
+            {selectedRoom ? (
+              <>
+                <div>
+                  <span>Habitación seleccionada</span>
+                  <strong>{selectedRoom.room_number} - {selectedRoom.name}</strong>
+                  <small>Máximo {selectedRoom.capacity} personas</small>
+                </div>
+                <div>
+                  <span>Precio por noche</span>
+                  <strong className="price-highlight">{money(selectedRoom.nightly_price)}</strong>
+                  <small>{nights > 0 ? `${nights} noche${nights === 1 ? "" : "s"} seleccionada${nights === 1 ? "" : "s"}` : "Selecciona entrada y salida"}</small>
+                </div>
+                <div>
+                  <span>Total estimado</span>
+                  <strong className="total-highlight">{estimatedTotal > 0 ? money(estimatedTotal) : "Pendiente"}</strong>
+                  <small>No incluye cargos adicionales si aplican</small>
+                </div>
+              </>
+            ) : (
+              <p>Selecciona hotel y habitación para ver precio, capacidad y total estimado.</p>
+            )}
+          </div>
           <label>
             Entrada
             <input type="date" min={todayISO()} value={form.check_in} onChange={(event) => setForm({ ...form, check_in: event.target.value })} required />

@@ -196,26 +196,6 @@ textarea {
   white-space: nowrap;
 }
 
-.room-summary {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  margin-top: 4px;
-  padding: 9px 10px;
-  border: 1px solid var(--line);
-  border-radius: 8px;
-  background: #fbfdff;
-  color: var(--muted);
-  font-size: 12px;
-  font-weight: 800;
-}
-
-.room-summary strong {
-  color: var(--navy);
-  white-space: nowrap;
-}
-
 .primary-button,
 .ghost-button,
 .logout-button,
@@ -370,6 +350,58 @@ textarea {
   grid-column: span 2;
 }
 
+.booking-summary {
+  min-height: 96px;
+  display: grid;
+  grid-template-columns: 1.2fr 0.9fr 0.9fr;
+  gap: 12px;
+  align-items: stretch;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fbfdff;
+}
+
+.booking-summary > div {
+  display: grid;
+  align-content: center;
+  gap: 4px;
+  min-width: 0;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: #fff;
+}
+
+.booking-summary span,
+.booking-summary small {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.booking-summary strong {
+  color: var(--navy);
+  font-size: 15px;
+}
+
+.booking-summary p {
+  grid-column: 1 / -1;
+  margin: 0;
+  align-self: center;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.booking-summary .price-highlight {
+  color: var(--success);
+  font-size: 20px;
+}
+
+.booking-summary .total-highlight {
+  color: #0b6b3a;
+  font-size: 22px;
+}
+
 .calendar-list,
 .catalog-row {
   display: grid;
@@ -520,6 +552,10 @@ th {
 
   .span-2 {
     grid-column: span 1;
+  }
+
+  .booking-summary {
+    grid-template-columns: 1fr;
   }
 
   .sidebar nav {
