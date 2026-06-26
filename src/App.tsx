@@ -560,9 +560,15 @@ function Availability({ reservations, rooms }: { reservations: Reservation[]; ro
         {upcoming.length === 0 && <p className="muted">No hay reservas próximas.</p>}
         {upcoming.map((reservation) => (
           <article key={reservation.id} className="calendar-item">
-            <div>
+            <div className="calendar-room">
               <strong>{reservation.rooms?.room_number ?? rooms.find((room) => room.id === reservation.room_id)?.room_number}</strong>
-              <span>{reservation.check_in} al {reservation.check_out} · {reservation.rooms?.capacity ?? rooms.find((room) => room.id === reservation.room_id)?.capacity} personas máx.</span>
+              <span>{reservation.rooms?.name ?? "Habitación reservada"}</span>
+              <small>{reservation.hotels?.name}</small>
+            </div>
+            <div className="calendar-date">
+              <span>Entrada</span>
+              <strong>{reservation.check_in}</strong>
+              <small>Salida {reservation.check_out}</small>
             </div>
             <span className={`status ${reservation.status}`}>{statusLabels[reservation.status]}</span>
           </article>

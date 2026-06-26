@@ -429,16 +429,38 @@ textarea {
 }
 
 .calendar-item {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto auto;
   align-items: center;
-  justify-content: space-between;
   gap: 12px;
 }
 
-.calendar-item span,
+.calendar-room,
+.calendar-date {
+  display: grid;
+  gap: 3px;
+  min-width: 0;
+}
+
+.calendar-room strong,
+.calendar-date strong {
+  color: var(--navy);
+}
+
+.calendar-room span,
+.calendar-room small,
+.calendar-date span,
+.calendar-date small,
 .catalog-row span,
 .muted {
   color: var(--muted);
+}
+
+.calendar-room small,
+.calendar-date span,
+.calendar-date small {
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .status.pendiente {
@@ -572,6 +594,11 @@ th {
 
   .guest-fields {
     grid-template-columns: 1fr;
+  }
+
+  .calendar-item {
+    grid-template-columns: 1fr;
+    align-items: start;
   }
 
   .sidebar nav {
